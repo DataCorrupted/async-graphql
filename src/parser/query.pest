@@ -1,0 +1,38 @@
+COMMENT = _{ "#" ~ (!"\n" ~ ANY)* }
+WHITESPACE = _{ " " | "," | "\n" | "\r" | "\t" | "\u{10feff}"}
+
+int    = @{ "0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* }
+float  = @{ "-"? ~ int ~ ("." ~ ASCII_DIGIT+ ~ exp? | exp)? }
+exp    = @{ ("E" | "e") ~ ("+" | "-")? ~ ASCII_DIGIT+ }
+
+string  = @{ "\"" ~ string_inner ~ "\"" }
+string_inner   = @{ (!("\"" | "\\") ~ ANY)* ~ (escape ~ string_inner)? }
+escape  = @{ "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | unicode) }
+unicode = @{ "u" ~ ASCII_HEX_DIGIT{4} }
+
+boolean = { "true" | "false" }
+
+null = { "null" }
+
+name = @{ ID_START ~ ID_CONTINUE* }
+
+variable = @{ "$" ~ name }
+
+value = { object | array | float | int | string | boolean | null}
+
+array = {
+    "[" ~ "]" |
+    "[" ~ value ~ ("," ~ value)* ~ "]"
+}
+
+pair = { string ~ ":" ~ value }
+object = {
+    "{" ~ "}" |
+    "{" ~ pair ~ ("," ~ pair)* ~ "}"
+}
+
+bool = { "true" | "false" }
+
+selection_set = {
+    "{" ~ selection ~ (",")
+}

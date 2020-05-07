@@ -76,12 +76,15 @@
 extern crate thiserror;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate pest_derive;
 
 mod base;
 mod context;
 mod error;
 mod model;
 mod mutation_resolver;
+mod parser;
 mod query;
 mod resolver;
 mod scalars;
