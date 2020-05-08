@@ -1,6 +1,7 @@
 COMMENT = _{ "#" ~ (!"\n" ~ ANY)* }
 WHITESPACE = _{ " " | "," | "\n" | "\r" | "\t" | "\u{10feff}"}
 
+// value
 int    = @{ "0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* }
 float  = @{ "-"? ~ int ~ ("." ~ ASCII_DIGIT+ ~ exp? | exp)? }
 exp    = @{ ("E" | "e") ~ ("+" | "-")? ~ ASCII_DIGIT+ }
@@ -11,28 +12,21 @@ escape  = @{ "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | unicode) 
 unicode = @{ "u" ~ ASCII_HEX_DIGIT{4} }
 
 boolean = { "true" | "false" }
-
 null = { "null" }
-
 name = @{ ID_START ~ ID_CONTINUE* }
-
 variable = @{ "$" ~ name }
+
+array = { "[" ~ value* ~ "]" }
+
+object_pair = { name ~ ":" ~ value }
+object = { "{" ~ object_pair* ~ "}" }
 
 value = { object | array | float | int | string | boolean | null}
 
-array = {
-    "[" ~ "]" |
-    "[" ~ value ~ ("," ~ value)* ~ "]"
-}
+// query
 
-pair = { string ~ ":" ~ value }
-object = {
-    "{" ~ "}" |
-    "{" ~ pair ~ ("," ~ pair)* ~ "}"
-}
-
-bool = { "true" | "false" }
-
-selection_set = {
-    "{" ~ selection ~ (",")
-}
+argument = { name ~ ":" ~ value }
+arguments = { "(" ~ argument* ~ ")" }
+field = { name? ~ name ~ arguments? }
+selection = { "{" ~ field* ~ "}" }
+selection_set = { "{" ~ selection ~ ("," ~ selection) }
