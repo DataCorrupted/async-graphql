@@ -1,16 +1,34 @@
 use crate::parser::span::Spanned;
 use crate::parser::value::Value;
 use std::collections::BTreeMap;
+use std::fmt;
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Type {
+    Named(Spanned<String>),
+    List(Box<Spanned<Type>>),
+    NonNull(Box<Spanned<Type>>),
+}
+
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Type::Named(name) => write!(f, "{}", name),
+            Type::List(ty) => write!(f, "[{}]", ty),
+            Type::NonNull(ty) => write!(f, "{}!", ty),
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct Directive {
     pub name: Spanned<String>,
-    pub arguments: Spanned<BTreeMap<Spanned<String>, Spanned<Value>>>,
+    pub arguments: BTreeMap<Spanned<String>, Spanned<Value>>,
 }
 
 #[derive(Clone, Debug)]
 pub struct Document {
-    pub definitions: Spanned<Vec<Spanned<Definition>>>,
+    pub definitions: Vec<Spanned<Definition>>,
 }
 
 #[derive(Clone, Debug)]
@@ -28,7 +46,7 @@ pub enum TypeCondition {
 pub struct FragmentDefinition {
     pub name: Spanned<String>,
     pub type_condition: Spanned<TypeCondition>,
-    pub directives: Spanned<Vec<Directive>>,
+    pub directives: Vec<Spanned<Directive>>,
     pub selection_set: Spanned<SelectionSet>,
 }
 
@@ -43,36 +61,36 @@ pub enum OperationDefinition {
 #[derive(Clone, Debug)]
 pub struct Query {
     pub name: Option<Spanned<String>>,
-    pub variable_definitions: Spanned<Vec<Spanned<VariableDefinition>>>,
-    pub directives: Spanned<Vec<Directive>>,
+    pub variable_definitions: Vec<Spanned<VariableDefinition>>,
+    pub directives: Vec<Spanned<Directive>>,
     pub selection_set: Spanned<SelectionSet>,
 }
 
 #[derive(Clone, Debug)]
 pub struct Mutation {
     pub name: Option<Spanned<String>>,
-    pub variable_definitions: Spanned<Vec<Spanned<VariableDefinition>>>,
-    pub directives: Spanned<Vec<Spanned<Directive>>>,
+    pub variable_definitions: Vec<Spanned<VariableDefinition>>,
+    pub directives: Vec<Spanned<Directive>>,
     pub selection_set: Spanned<SelectionSet>,
 }
 
 #[derive(Clone, Debug)]
 pub struct Subscription {
     pub name: Option<Spanned<String>>,
-    pub variable_definitions: Spanned<Vec<Spanned<VariableDefinition>>>,
-    pub directives: Spanned<Vec<Spanned<Directive>>>,
+    pub variable_definitions: Vec<Spanned<VariableDefinition>>,
+    pub directives: Vec<Spanned<Directive>>,
     pub selection_set: Spanned<SelectionSet>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct SelectionSet {
-    pub items: Spanned<Vec<Spanned<Selection>>>,
+    pub items: Vec<Spanned<Selection>>,
 }
 
 #[derive(Clone, Debug)]
 pub struct VariableDefinition {
     pub name: Spanned<String>,
-    pub var_type: Spanned<String>,
+    pub var_type: Spanned<Type>,
     pub default_value: Option<Spanned<Value>>,
 }
 
@@ -87,20 +105,20 @@ pub enum Selection {
 pub struct Field {
     pub alias: Option<Spanned<String>>,
     pub name: Spanned<String>,
-    pub arguments: Spanned<BTreeMap<Spanned<String>, Spanned<Value>>>,
-    pub directives: Spanned<Vec<Spanned<Directive>>>,
-    pub selection_set: Spanned<SelectionSet>,
+    pub arguments: BTreeMap<Spanned<String>, Spanned<Value>>,
+    pub directives: Vec<Spanned<Directive>>,
+    pub selection_set: Option<Spanned<SelectionSet>>,
 }
 
 #[derive(Clone, Debug)]
 pub struct FragmentSpread {
     pub fragment_name: Spanned<String>,
-    pub directives: Spanned<Vec<Spanned<Directive>>>,
+    pub directives: Vec<Spanned<Directive>>,
 }
 
 #[derive(Clone, Debug)]
 pub struct InlineFragment {
     pub type_condition: Option<Spanned<TypeCondition>>,
-    pub directives: Spanned<Vec<Spanned<Directive>>>,
+    pub directives: Vec<Spanned<Directive>>,
     pub selection_set: Spanned<SelectionSet>,
 }

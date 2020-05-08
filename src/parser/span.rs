@@ -1,16 +1,45 @@
 use std::cmp::Ordering;
+use std::fmt;
 use std::ops::{Deref, DerefMut};
+
+/// Original position of element in source code
+#[derive(PartialOrd, Ord, PartialEq, Eq, Clone, Copy, Default, Hash)]
+pub struct Pos {
+    /// One-based line number
+    pub line: usize,
+
+    /// One-based column number
+    pub column: usize,
+}
+
+impl fmt::Debug for Pos {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Pos({}:{})", self.line, self.column)
+    }
+}
+
+impl fmt::Display for Pos {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}:{}", self.line, self.column)
+    }
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct Span {
-    pub start: usize,
-    pub end: usize,
+    pub start: Pos,
+    pub end: Pos,
 }
 
 #[derive(Clone, Debug, Copy)]
 pub struct Spanned<T> {
     pub span: Span,
     pub node: T,
+}
+
+impl<T: fmt::Display> fmt::Display for Spanned<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.node.fmt(f)
+    }
 }
 
 impl<T: PartialEq> PartialEq for Spanned<T> {
@@ -20,10 +49,23 @@ impl<T: PartialEq> PartialEq for Spanned<T> {
 }
 
 impl<T> Spanned<T> {
-    pub fn new(node: T, start: usize, end: usize) -> Spanned<T> {
+    pub(crate) fn new(node: T, pair_span: pest::Span<'_>) -> Spanned<T> {
+        let ((start_line, start_column), (end_line, end_column)) = (
+            pair_span.start_pos().line_col(),
+            pair_span.end_pos().line_col(),
+        );
         Spanned {
             node,
-            span: Span { start, end },
+            span: Span {
+                start: Pos {
+                    line: start_line,
+                    column: start_column,
+                },
+                end: Pos {
+                    line: end_line,
+                    column: end_column,
+                },
+            },
         }
     }
 
@@ -33,15 +75,18 @@ impl<T> Spanned<T> {
     }
 
     #[inline]
-    pub fn start_pos(&self) -> usize {
-        self.span.start
+    pub fn pack<F: FnOnce(Self) -> R, R>(self, f: F) -> Spanned<R> {
+        Spanned {
+            span: self.span(),
+            node: f(self),
+        }
     }
 
     #[inline]
-    pub fn with<Q>(&self, node: Q) -> Spanned<Q> {
+    pub fn map<F: FnOnce(T) -> R, R>(self, f: F) -> Spanned<R> {
         Spanned {
-            node,
-            span: self.span,
+            span: self.span(),
+            node: f(self.node),
         }
     }
 }

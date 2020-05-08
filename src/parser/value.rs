@@ -1,5 +1,6 @@
 use crate::parser::span::Spanned;
 use std::collections::BTreeMap;
+use std::fmt;
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -53,6 +54,63 @@ impl PartialEq for Value {
                 true
             }
             _ => false,
+        }
+    }
+}
+
+fn write_quoted(s: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "\"")?;
+    for c in s.chars() {
+        match c {
+            '\r' => write!(f, "\r")?,
+            '\n' => write!(f, "\n")?,
+            '\t' => write!(f, "\t")?,
+            '"' => write!(f, "\"")?,
+            '\\' => write!(f, "\\")?,
+            '\u{0020}'..='\u{FFFF}' => write!(f, "{}", c)?,
+            _ => write!(f, "\\u{:04}", c as u32).unwrap(),
+        }
+    }
+    write!(f, "\"")
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::Variable(name) => write!(f, "${}", name),
+            Value::Int(num) => write!(f, "{}", *num),
+            Value::Float(val) => write!(f, "{}", *val),
+            Value::String(ref val) => write_quoted(val, f),
+            Value::Boolean(true) => write!(f, "true"),
+            Value::Boolean(false) => write!(f, "false"),
+            Value::Null => write!(f, "null"),
+            Value::Enum(ref name) => write!(f, "{}", name),
+            Value::List(ref items) => {
+                write!(f, "[")?;
+                if !items.is_empty() {
+                    write!(f, "{}", items[0])?;
+                    for item in &items[1..] {
+                        write!(f, ", ")?;
+                        write!(f, "{}", item)?;
+                    }
+                }
+                write!(f, "]")
+            }
+            Value::Object(items) => {
+                write!(f, "{{")?;
+                let mut first = true;
+                for (name, value) in items {
+                    if first {
+                        first = false;
+                    } else {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", name)?;
+                    write!(f, ": ")?;
+                    write!(f, "{}", value)?;
+                }
+                write!(f, "}}")
+            }
         }
     }
 }
