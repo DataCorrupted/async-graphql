@@ -1,5 +1,5 @@
+use crate::parser::ast::{Definition, Document, OperationDefinition};
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{Definition, Document, OperationDefinition};
 
 #[derive(Default)]
 pub struct LoneAnonymousOperation {

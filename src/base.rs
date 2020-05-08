@@ -1,7 +1,8 @@
+use crate::parser::Pos;
 use crate::registry::Registry;
-use crate::{registry, Context, ContextSelectionSet, FieldResult, QueryError, Result, ID};
-use graphql_parser::query::Value;
-use graphql_parser::Pos;
+use crate::{
+    registry, Context, ContextSelectionSet, FieldResult, QueryError, Result, Spanned, Value, ID,
+};
 use std::borrow::Cow;
 use std::future::Future;
 use std::pin::Pin;
@@ -79,15 +80,14 @@ pub trait ObjectType: OutputValueType {
     /// Collect the fields with the `name` inline object
     fn collect_inline_fields<'a>(
         &'a self,
-        name: &str,
-        _pos: Pos,
+        name: &Spanned<String>,
         ctx: &ContextSelectionSet<'a>,
         futures: &mut Vec<BoxFieldFuture<'a>>,
     ) -> Result<()>
     where
         Self: Send + Sync + Sized,
     {
-        if name == Self::type_name().as_ref()
+        if name.as_str() == Self::type_name().as_ref()
             || ctx
                 .registry
                 .implements
@@ -102,13 +102,8 @@ pub trait ObjectType: OutputValueType {
     }
 
     /// Query entities with params
-    async fn find_entity(
-        &self,
-        _ctx: &Context<'_>,
-        pos: Pos,
-        _params: &Value,
-    ) -> Result<serde_json::Value> {
-        Err(QueryError::EntityNotFound.into_error(pos))
+    async fn find_entity(&self, ctx: &Context<'_>, _params: &Value) -> Result<serde_json::Value> {
+        Err(QueryError::EntityNotFound.into_error(ctx.position()))
     }
 }
 

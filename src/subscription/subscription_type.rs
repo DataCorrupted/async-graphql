@@ -1,7 +1,7 @@
 use crate::context::Environment;
+use crate::parser::ast::{Selection, TypeCondition};
 use crate::{Context, ContextSelectionSet, ObjectType, Result, Schema, Type};
 use futures::{Future, Stream};
-use graphql_parser::query::{Selection, TypeCondition};
 use std::pin::Pin;
 use std::sync::Arc;
 

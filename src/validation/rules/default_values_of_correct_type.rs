@@ -1,8 +1,8 @@
 use crate::context::QueryPathNode;
+use crate::parser::ast::{Type, VariableDefinition};
 use crate::validation::utils::is_valid_input_value;
 use crate::validation::visitor::{Visitor, VisitorContext};
 use crate::QueryPathSegment;
-use graphql_parser::query::{Type, VariableDefinition};
 
 pub struct DefaultValuesOfCorrectType;
 

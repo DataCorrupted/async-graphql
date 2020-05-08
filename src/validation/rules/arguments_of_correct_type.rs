@@ -1,11 +1,9 @@
 use crate::context::QueryPathNode;
+use crate::parser::ast::{Directive, Field};
 use crate::registry::InputValue;
 use crate::validation::utils::is_valid_input_value;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use crate::QueryPathSegment;
-use graphql_parser::query::Field;
-use graphql_parser::schema::{Directive, Value};
-use graphql_parser::Pos;
+use crate::{Pos, QueryPathSegment, Value};
 use std::collections::HashMap;
 
 #[derive(Default)]

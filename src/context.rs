@@ -1,10 +1,9 @@
 use crate::extensions::BoxExtension;
+use crate::parser::ast::{Directive, Field, FragmentDefinition, SelectionSet, VariableDefinition};
 use crate::registry::Registry;
-use crate::{InputValueType, Pos, QueryError, Result, Schema, Type};
+use crate::{InputValueType, QueryError, Result, Schema, Type};
+use crate::{Pos, Spanned, Value};
 use fnv::FnvHashMap;
-use graphql_parser::query::{
-    Directive, Field, FragmentDefinition, SelectionSet, Value, VariableDefinition,
-};
 use std::any::{Any, TypeId};
 use std::collections::{BTreeMap, HashMap};
 use std::ops::{Deref, DerefMut};
@@ -78,7 +77,11 @@ impl Variables {
                 if let Value::List(ls) = current {
                     if let Some(value) = ls.get_mut(idx as usize) {
                         if !has_next {
-                            *value = Value::String(file_string(filename, content_type, path));
+                            *value = Spanned::new_default(Value::String(file_string(
+                                filename,
+                                content_type,
+                                path,
+                            )));
                             return;
                         } else {
                             current = value;
@@ -90,7 +93,11 @@ impl Variables {
             } else if let Value::Object(obj) = current {
                 if let Some(value) = obj.get_mut(s) {
                     if !has_next {
-                        *value = Value::String(file_string(filename, content_type, path));
+                        *value = Spanned::new_default(Value::String(file_string(
+                            filename,
+                            content_type,
+                            path,
+                        )));
                         return;
                     } else {
                         current = value;
@@ -141,10 +148,10 @@ impl Data {
 }
 
 /// Context for `SelectionSet`
-pub type ContextSelectionSet<'a> = ContextBase<'a, &'a SelectionSet>;
+pub type ContextSelectionSet<'a> = ContextBase<'a, &'a Spanned<SelectionSet>>;
 
 /// Context object for resolve field
-pub type Context<'a> = ContextBase<'a, &'a Field>;
+pub type Context<'a> = ContextBase<'a, &'a Spanned<Field>>;
 
 /// The query path segment
 #[derive(Clone)]
@@ -322,14 +329,14 @@ impl<'a, T> ContextBase<'a, T> {
     }
 
     #[doc(hidden)]
-    pub fn with_field(&'a self, field: &'a Field) -> ContextBase<'a, &'a Field> {
+    pub fn with_field(&'a self, field: &'a Spanned<Field>) -> ContextBase<'a, &'a Spanned<Field>> {
         ContextBase {
             path_node: Some(QueryPathNode {
                 parent: self.path_node.as_ref(),
                 segment: QueryPathSegment::Name(
                     field
                         .alias
-                        .as_deref()
+                        .map(|alias| alias.as_str())
                         .unwrap_or_else(|| field.name.as_str()),
                 ),
             }),
@@ -349,8 +356,8 @@ impl<'a, T> ContextBase<'a, T> {
     #[doc(hidden)]
     pub fn with_selection_set(
         &self,
-        selection_set: &'a SelectionSet,
-    ) -> ContextBase<'a, &'a SelectionSet> {
+        selection_set: &'a Spanned<SelectionSet>,
+    ) -> ContextBase<'a, &'a Spanned<SelectionSet>> {
         ContextBase {
             path_node: self.path_node.clone(),
             extensions: self.extensions,
@@ -384,12 +391,12 @@ impl<'a, T> ContextBase<'a, T> {
         let def = self
             .variable_definitions
             .iter()
-            .find(|def| def.name == name);
+            .find(|def| def.name.as_str() == name);
         if let Some(def) = def {
             if let Some(var_value) = self.variables.get(&def.name) {
                 return Ok(var_value.clone());
             } else if let Some(default) = &def.default_value {
-                return Ok(default.clone());
+                return Ok(default.clone_inner());
             }
         }
         Err(QueryError::VarNotDefined {
@@ -398,13 +405,17 @@ impl<'a, T> ContextBase<'a, T> {
         .into_error(pos))
     }
 
-    fn resolve_input_value(&self, mut value: Value, pos: Pos) -> Result<Value> {
+    fn resolve_input_value(&self, mut value: Spanned<Value>) -> Result<Spanned<Value>> {
         match value {
-            Value::Variable(var_name) => self.var_value(&var_name, pos),
+            Value::Variable(var_name) => self
+                .var_value(&var_name, value.position())
+                .map(|var_value| value.with(var_value)),
             Value::List(ref mut ls) => {
                 for value in ls {
                     if let Value::Variable(var_name) = value {
-                        *value = self.var_value(&var_name, pos)?;
+                        *value = self
+                            .var_value(&var_name, value.position())
+                            .map(|var_value| value.with(var_value))?;
                     }
                 }
                 Ok(value)
@@ -412,7 +423,9 @@ impl<'a, T> ContextBase<'a, T> {
             Value::Object(ref mut obj) => {
                 for value in obj.values_mut() {
                     if let Value::Variable(var_name) = value {
-                        *value = self.var_value(&var_name, pos)?;
+                        *value = self
+                            .var_value(&var_name, value.position())
+                            .map(|var_value| value.with(var_value))?;
                     }
                 }
                 Ok(value)
@@ -422,9 +435,9 @@ impl<'a, T> ContextBase<'a, T> {
     }
 
     #[doc(hidden)]
-    pub fn is_skip(&self, directives: &[Directive]) -> Result<bool> {
+    pub fn is_skip(&self, directives: &[Spanned<Directive>]) -> Result<bool> {
         for directive in directives {
-            if directive.name == "skip" {
+            if directive.name.as_str() == "skip" {
                 if let Some(value) = directive
                     .arguments
                     .iter()
@@ -435,7 +448,7 @@ impl<'a, T> ContextBase<'a, T> {
                     let res: bool = InputValueType::parse(&value).ok_or_else(|| {
                         QueryError::ExpectedType {
                             expect: bool::qualified_type_name(),
-                            actual: value,
+                            actual: value.into_inner(),
                         }
                         .into_error(directive.position)
                     })?;
@@ -450,7 +463,7 @@ impl<'a, T> ContextBase<'a, T> {
                     }
                     .into_error(directive.position));
                 }
-            } else if directive.name == "include" {
+            } else if directive.name.as_str() == "include" {
                 if let Some(value) = directive
                     .arguments
                     .iter()
@@ -461,7 +474,7 @@ impl<'a, T> ContextBase<'a, T> {
                     let res: bool = InputValueType::parse(&value).ok_or_else(|| {
                         QueryError::ExpectedType {
                             expect: bool::qualified_type_name(),
-                            actual: value,
+                            actual: value.into_inner(),
                         }
                         .into_error(directive.position)
                     })?;
@@ -478,7 +491,7 @@ impl<'a, T> ContextBase<'a, T> {
                 }
             } else {
                 return Err(QueryError::UnknownDirective {
-                    name: directive.name.clone(),
+                    name: directive.name.clone_inner(),
                 }
                 .into_error(directive.position));
             }
@@ -488,7 +501,7 @@ impl<'a, T> ContextBase<'a, T> {
     }
 }
 
-impl<'a> ContextBase<'a, &'a SelectionSet> {
+impl<'a> ContextBase<'a, &'a Spanned<SelectionSet>> {
     #[doc(hidden)]
     pub fn with_index(&'a self, idx: usize) -> ContextBase<'a, &'a SelectionSet> {
         ContextBase {
@@ -510,12 +523,11 @@ impl<'a> ContextBase<'a, &'a SelectionSet> {
     }
 }
 
-impl<'a> ContextBase<'a, &'a Field> {
+impl<'a> ContextBase<'a, &'a Spanned<Field>> {
     #[doc(hidden)]
     pub fn param_value<T: InputValueType, F: FnOnce() -> Value>(
         &self,
         name: &str,
-        pos: Pos,
         default: F,
     ) -> Result<T> {
         match self
@@ -526,11 +538,12 @@ impl<'a> ContextBase<'a, &'a Field> {
             .cloned()
         {
             Some(value) => {
-                let value = self.resolve_input_value(value, pos)?;
+                let value = self.resolve_input_value(value)?;
                 let res = InputValueType::parse(&value).ok_or_else(|| {
+                    let pos = value.position();
                     QueryError::ExpectedType {
                         expect: T::qualified_type_name(),
-                        actual: value,
+                        actual: value.into_inner(),
                     }
                     .into_error(pos)
                 })?;
@@ -543,7 +556,7 @@ impl<'a> ContextBase<'a, &'a Field> {
                         expect: T::qualified_type_name(),
                         actual: value.clone(),
                     }
-                    .into_error(pos)
+                    .into_error(self.position())
                 })?;
                 Ok(res)
             }
@@ -554,7 +567,7 @@ impl<'a> ContextBase<'a, &'a Field> {
     pub fn result_name(&self) -> &str {
         self.item
             .alias
-            .as_deref()
+            .map(|alias| alias.as_str())
             .unwrap_or_else(|| self.item.name.as_str())
     }
 }

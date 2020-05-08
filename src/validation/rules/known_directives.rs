@@ -1,9 +1,8 @@
 use crate::model::__DirectiveLocation;
-use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{
-    Field, FragmentDefinition, FragmentSpread, InlineFragment, OperationDefinition,
+use crate::parser::ast::{
+    Directive, Field, FragmentDefinition, FragmentSpread, InlineFragment, OperationDefinition,
 };
-use graphql_parser::schema::Directive;
+use crate::validation::visitor::{Visitor, VisitorContext};
 
 #[derive(Default)]
 pub struct KnownDirectives {

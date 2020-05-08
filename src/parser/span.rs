@@ -24,7 +24,7 @@ impl fmt::Display for Pos {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct Span {
     pub start: Pos,
     pub end: Pos,
@@ -49,6 +49,13 @@ impl<T: PartialEq> PartialEq for Spanned<T> {
 }
 
 impl<T> Spanned<T> {
+    pub(crate) fn new_default(node: T) -> Spanned<T> {
+        Spanned {
+            node,
+            span: Span::default(),
+        }
+    }
+
     pub(crate) fn new(node: T, pair_span: pest::Span<'_>) -> Spanned<T> {
         let ((start_line, start_column), (end_line, end_column)) = (
             pair_span.start_pos().line_col(),
@@ -70,8 +77,26 @@ impl<T> Spanned<T> {
     }
 
     #[inline]
+    pub fn with<Q>(&self, node: Q) -> Spanned<Q> {
+        Spanned {
+            node,
+            span: self.span,
+        }
+    }
+
+    #[inline]
+    pub fn into_inner(self) -> T {
+        self.node
+    }
+
+    #[inline]
     pub fn span(&self) -> Span {
         self.span
+    }
+
+    #[inline]
+    pub fn position(&self) -> Pos {
+        self.span.start
     }
 
     #[inline]
@@ -88,6 +113,13 @@ impl<T> Spanned<T> {
             span: self.span(),
             node: f(self.node),
         }
+    }
+}
+
+impl<T: Clone> Spanned<T> {
+    #[inline]
+    pub fn clone_inner(&self) -> T {
+        self.node.clone()
     }
 }
 

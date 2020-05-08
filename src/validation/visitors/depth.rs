@@ -1,5 +1,5 @@
+use crate::parser::ast::{FragmentSpread, InlineFragment, SelectionSet};
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{FragmentSpread, InlineFragment, SelectionSet};
 
 pub struct DepthCalculate<'a> {
     max_depth: &'a mut i32,

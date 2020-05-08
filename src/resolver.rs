@@ -1,8 +1,8 @@
 use crate::base::BoxFieldFuture;
 use crate::extensions::ResolveInfo;
+use crate::parser::ast::{Selection, TypeCondition};
 use crate::{ContextSelectionSet, Error, ObjectType, QueryError, Result};
 use futures::{future, TryFutureExt};
-use graphql_parser::query::{Selection, TypeCondition};
 use std::iter::FromIterator;
 
 #[allow(missing_docs)]
@@ -136,7 +136,6 @@ pub fn collect_fields<'a, T: ObjectType + Send + Sync>(
                 if let Some(TypeCondition::On(name)) = &inline_fragment.type_condition {
                     root.collect_inline_fields(
                         name,
-                        inline_fragment.position,
                         &ctx.with_selection_set(&inline_fragment.selection_set),
                         futures,
                     )?;

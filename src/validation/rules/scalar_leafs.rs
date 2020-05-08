@@ -1,5 +1,5 @@
+use crate::parser::ast::Field;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::Field;
 
 #[derive(Default)]
 pub struct ScalarLeafs;

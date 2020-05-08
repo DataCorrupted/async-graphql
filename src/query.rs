@@ -1,14 +1,15 @@
 use crate::context::{Data, ResolveId};
 use crate::error::ParseRequestError;
 use crate::mutation_resolver::do_mutation_resolve;
-use crate::registry::CacheControl;
-use crate::validation::{check_rules, CheckResult};
-use crate::{do_resolve, ContextBase, Error, Result, Schema};
-use crate::{ObjectType, QueryError, Variables};
-use graphql_parser::query::{
+use crate::parser::ast::{
     Definition, Document, OperationDefinition, SelectionSet, VariableDefinition,
 };
-use graphql_parser::{parse_query, Pos};
+use crate::parser::parse_query;
+use crate::registry::CacheControl;
+use crate::validation::{check_rules, CheckResult};
+use crate::{
+    do_resolve, ContextBase, Error, ObjectType, Pos, QueryError, Result, Schema, Variables,
+};
 use itertools::Itertools;
 use std::any::Any;
 use std::collections::HashMap;

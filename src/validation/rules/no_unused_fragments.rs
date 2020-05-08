@@ -1,9 +1,9 @@
+use crate::parser::ast::{
+    Definition, Document, FragmentDefinition, FragmentSpread, OperationDefinition,
+};
 use crate::validation::utils::{operation_name, Scope};
 use crate::validation::visitor::{Visitor, VisitorContext};
 use crate::Pos;
-use graphql_parser::query::{
-    Definition, Document, FragmentDefinition, FragmentSpread, OperationDefinition,
-};
 use std::collections::{HashMap, HashSet};
 
 #[derive(Default)]

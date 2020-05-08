@@ -1,6 +1,8 @@
 use crate::context::Data;
 use crate::extensions::{BoxExtension, Extension};
 use crate::model::__DirectiveLocation;
+use crate::parser::ast::{Definition, OperationDefinition};
+use crate::parser::parse_query;
 use crate::query::QueryBuilder;
 use crate::registry::{Directive, InputValue, Registry};
 use crate::subscription::{create_connection, create_subscription_stream, SubscriptionTransport};
@@ -13,8 +15,6 @@ use crate::{
 use bytes::Bytes;
 use futures::channel::mpsc;
 use futures::Stream;
-use graphql_parser::parse_query;
-use graphql_parser::query::{Definition, OperationDefinition};
 use std::any::Any;
 use std::collections::HashMap;
 use std::sync::atomic::AtomicUsize;

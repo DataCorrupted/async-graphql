@@ -2,6 +2,7 @@ use crate::parser::span::Spanned;
 use std::collections::BTreeMap;
 use std::fmt;
 
+/// Represents a GraphQL value
 #[derive(Clone, Debug)]
 pub enum Value {
     Null,

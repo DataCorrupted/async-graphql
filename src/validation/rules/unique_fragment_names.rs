@@ -1,5 +1,5 @@
+use crate::parser::ast::FragmentDefinition;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::FragmentDefinition;
 use std::collections::HashSet;
 
 #[derive(Default)]

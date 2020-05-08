@@ -1,5 +1,5 @@
+use crate::parser::ast::Field;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::Field;
 
 pub struct ComplexityCalculate<'a> {
     pub complexity: &'a mut usize,

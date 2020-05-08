@@ -1,5 +1,5 @@
+use crate::parser::ast::{Field, Selection, SelectionSet};
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{Field, Selection, SelectionSet};
 use std::collections::HashMap;
 
 #[derive(Default)]

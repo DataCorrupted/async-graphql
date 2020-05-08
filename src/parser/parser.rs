@@ -9,7 +9,9 @@ use std::collections::BTreeMap;
 #[grammar = "parser/query.pest"]
 struct QueryParser;
 
-pub fn parse<T: AsRef<str>>(input: T) -> Result<Document, Error<Rule>> {
+pub type ParseError = Error<Rule>;
+
+pub fn parse_query<T: AsRef<str>>(input: T) -> Result<Document, Error<Rule>> {
     let document_pair: Pair<Rule> = QueryParser::parse(Rule::document, input.as_ref())?
         .next()
         .unwrap();
@@ -296,7 +298,7 @@ fn parse_field(pair: Pair<Rule>) -> Spanned<Field> {
             name: name.unwrap(),
             arguments: arguments.unwrap_or_default(),
             directives: directives.unwrap_or_default(),
-            selection_set,
+            selection_set: selection_set.unwrap_or_default(),
         },
         span,
     )
@@ -424,7 +426,7 @@ mod tests {
     fn test_parser_ast() {
         for entry in fs::read_dir("tests/queries").unwrap() {
             if let Ok(entry) = entry {
-                parse(fs::read_to_string(entry.path()).unwrap()).unwrap();
+                parse_query(fs::read_to_string(entry.path()).unwrap()).unwrap();
             }
         }
     }

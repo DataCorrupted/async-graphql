@@ -1,5 +1,5 @@
+use crate::parser::ast::{FragmentDefinition, InlineFragment, TypeCondition};
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{FragmentDefinition, InlineFragment, TypeCondition};
 
 #[derive(Default)]
 pub struct FragmentsOnCompositeTypes;

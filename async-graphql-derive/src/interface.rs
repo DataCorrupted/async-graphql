@@ -67,7 +67,7 @@ pub fn generate(interface_args: &args::Interface, input: &DeriveInput) -> Result
 
                 collect_inline_fields.push(quote! {
                     if let #ident::#enum_name(obj) = self {
-                        return obj.collect_inline_fields(name, pos, ctx, futures);
+                        return obj.collect_inline_fields(name, ctx, futures);
                     }
                 });
 
@@ -287,8 +287,7 @@ pub fn generate(interface_args: &args::Interface, input: &DeriveInput) -> Result
 
             fn collect_inline_fields<'a>(
                 &'a self,
-                name: &str,
-                pos: #crate_name::Pos,
+                name: &#crate_name::Spanned<String>,
                 ctx: &#crate_name::ContextSelectionSet<'a>,
                 futures: &mut Vec<#crate_name::BoxFieldFuture<'a>>,
             ) -> #crate_name::Result<()> {

@@ -1,5 +1,5 @@
+use crate::parser::ast::{OperationDefinition, VariableDefinition};
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{OperationDefinition, VariableDefinition};
 use std::collections::HashSet;
 
 #[derive(Default)]

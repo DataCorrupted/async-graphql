@@ -1,10 +1,9 @@
-use crate::validation::utils::{operation_name, referenced_variables, Scope};
-use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{
+use crate::parser::ast::{
     Document, FragmentDefinition, FragmentSpread, OperationDefinition, VariableDefinition,
 };
-use graphql_parser::schema::Value;
-use graphql_parser::Pos;
+use crate::validation::utils::{operation_name, referenced_variables, Scope};
+use crate::validation::visitor::{Visitor, VisitorContext};
+use crate::{Pos, Value};
 use std::collections::{HashMap, HashSet};
 
 #[derive(Default)]

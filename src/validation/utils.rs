@@ -1,6 +1,6 @@
 use crate::context::QueryPathNode;
+use crate::parser::ast::OperationDefinition;
 use crate::{registry, Pos, QueryPathSegment, Value};
-use graphql_parser::query::OperationDefinition;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

@@ -1,6 +1,6 @@
 use crate::extensions::ResolveInfo;
+use crate::parser::ast::{Selection, TypeCondition};
 use crate::{ContextSelectionSet, Error, ObjectType, QueryError, Result};
-use graphql_parser::query::{Selection, TypeCondition};
 use std::future::Future;
 use std::pin::Pin;
 
@@ -24,7 +24,7 @@ fn do_resolve<'a, T: ObjectType + Send + Sync>(
     Box::pin(async move {
         if ctx.items.is_empty() {
             return Err(Error::Query {
-                pos: ctx.span.0,
+                pos: ctx.position(),
                 path: None,
                 err: QueryError::MustHaveSubFields {
                     object: T::type_name().to_string(),
@@ -33,7 +33,7 @@ fn do_resolve<'a, T: ObjectType + Send + Sync>(
         }
 
         for selection in &ctx.item.items {
-            match selection {
+            match &selection.node {
                 Selection::Field(field) => {
                     if ctx.is_skip(&field.directives)? {
                         continue;
@@ -68,7 +68,7 @@ fn do_resolve<'a, T: ObjectType + Send + Sync>(
                                         pos: field.position,
                                         path: None,
                                         err: QueryError::FieldNotFound {
-                                            field_name: field.name.clone(),
+                                            field_name: field.name.clone_inner(),
                                             object: T::type_name().to_string(),
                                         },
                                     });
@@ -111,7 +111,7 @@ fn do_resolve<'a, T: ObjectType + Send + Sync>(
                             pos: fragment_spread.position,
                             path: None,
                             err: QueryError::UnknownFragment {
-                                name: fragment_spread.fragment_name.clone(),
+                                name: fragment_spread.fragment_name.clone_inner(),
                             },
                         });
                     }

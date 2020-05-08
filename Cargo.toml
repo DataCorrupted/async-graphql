@@ -18,7 +18,6 @@ default = ["bson", "uuid", "url", "chrono-tz"]
 
 [dependencies]
 async-graphql-derive = { path = "async-graphql-derive", version = "1.10.10" }
-graphql-parser = "=0.2.3"
 anyhow = "1.0.26"
 thiserror = "1.0.11"
 async-trait = "0.1.24"

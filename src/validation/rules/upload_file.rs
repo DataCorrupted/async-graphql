@@ -1,5 +1,5 @@
+use crate::parser::ast::OperationDefinition;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::OperationDefinition;
 
 #[derive(Default)]
 pub struct UploadFile;

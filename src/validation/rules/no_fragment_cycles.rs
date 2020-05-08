@@ -1,7 +1,7 @@
 use crate::error::RuleError;
+use crate::parser::ast::{Document, FragmentDefinition, FragmentSpread};
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{Document, FragmentDefinition, FragmentSpread};
-use graphql_parser::Pos;
+use crate::Pos;
 use std::collections::{HashMap, HashSet};
 
 struct CycleDetector<'a> {

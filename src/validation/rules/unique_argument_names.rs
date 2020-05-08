@@ -1,7 +1,6 @@
+use crate::parser::ast::{Directive, Field};
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::Field;
-use graphql_parser::schema::{Directive, Value};
-use graphql_parser::Pos;
+use crate::{Pos, Value};
 use std::collections::HashSet;
 
 #[derive(Default)]

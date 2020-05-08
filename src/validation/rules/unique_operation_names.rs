@@ -1,5 +1,5 @@
+use crate::parser::ast::{Mutation, OperationDefinition, Query, Subscription};
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{Mutation, OperationDefinition, Query, Subscription};
 use std::collections::HashSet;
 
 #[derive(Default)]

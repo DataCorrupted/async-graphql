@@ -1,5 +1,5 @@
+use crate::parser::ast::VariableDefinition;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::VariableDefinition;
 
 #[derive(Default)]
 pub struct VariablesAreInputTypes;

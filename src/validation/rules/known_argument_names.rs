@@ -1,9 +1,8 @@
+use crate::parser::ast::{Directive, Field};
 use crate::registry::InputValue;
 use crate::validation::suggestion::make_suggestion;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use crate::Value;
-use graphql_parser::query::{Directive, Field};
-use graphql_parser::Pos;
+use crate::{Pos, Value};
 use std::collections::HashMap;
 
 enum ArgsType<'a> {

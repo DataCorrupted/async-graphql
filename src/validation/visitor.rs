@@ -1,11 +1,10 @@
 use crate::error::RuleError;
-use crate::registry;
-use crate::registry::{Type, TypeName};
-use graphql_parser::query::{
+use crate::parser::ast::{
     Definition, Directive, Document, Field, FragmentDefinition, FragmentSpread, InlineFragment,
-    OperationDefinition, Selection, SelectionSet, TypeCondition, Value, VariableDefinition,
+    OperationDefinition, Selection, SelectionSet, TypeCondition, VariableDefinition,
 };
-use graphql_parser::Pos;
+use crate::registry::{self, Type, TypeName};
+use crate::{Pos, Value};
 use std::collections::HashMap;
 
 pub struct VisitorContext<'a> {

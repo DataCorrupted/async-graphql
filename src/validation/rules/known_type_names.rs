@@ -1,9 +1,7 @@
+use crate::parser::ast::{FragmentDefinition, InlineFragment, TypeCondition, VariableDefinition};
 use crate::registry::TypeName;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{
-    FragmentDefinition, InlineFragment, TypeCondition, VariableDefinition,
-};
-use graphql_parser::Pos;
+use crate::Pos;
 
 #[derive(Default)]
 pub struct KnownTypeNames;

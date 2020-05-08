@@ -107,7 +107,7 @@ pub struct Field {
     pub name: Spanned<String>,
     pub arguments: BTreeMap<Spanned<String>, Spanned<Value>>,
     pub directives: Vec<Spanned<Directive>>,
-    pub selection_set: Option<Spanned<SelectionSet>>,
+    pub selection_set: Spanned<SelectionSet>,
 }
 
 #[derive(Clone, Debug)]

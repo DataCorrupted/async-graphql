@@ -1,6 +1,6 @@
+use crate::parser::ast::Type as ParsedType;
 use crate::validators::InputValueValidator;
 use crate::{model, Any, Type as _, Value};
-use graphql_parser::query::Type as ParsedType;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::sync::Arc;

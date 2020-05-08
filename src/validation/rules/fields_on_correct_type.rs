@@ -1,7 +1,7 @@
+use crate::parser::ast::Field;
 use crate::registry;
 use crate::validation::suggestion::make_suggestion;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::Field;
 
 #[derive(Default)]
 pub struct FieldsOnCorrectType;

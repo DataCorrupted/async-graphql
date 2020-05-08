@@ -1,5 +1,5 @@
+use crate::parser::ast::FragmentSpread;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::FragmentSpread;
 
 #[derive(Default)]
 pub struct KnownFragmentNames;

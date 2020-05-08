@@ -1,7 +1,7 @@
+use crate::parser::ast::{Field, SelectionSet};
 use crate::registry::Type;
 use crate::validation::visitor::{Visitor, VisitorContext};
 use crate::CacheControl;
-use graphql_parser::query::{Field, SelectionSet};
 
 pub struct CacheControlCalculate<'a> {
     pub cache_control: &'a mut CacheControl,

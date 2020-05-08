@@ -1,7 +1,6 @@
+use crate::parser::ast::{Directive, Field};
 use crate::registry::TypeName;
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::Field;
-use graphql_parser::schema::Directive;
 
 #[derive(Default)]
 pub struct ProvidedNonNullArguments;

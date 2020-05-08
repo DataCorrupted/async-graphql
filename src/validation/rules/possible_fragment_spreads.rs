@@ -1,5 +1,5 @@
+use crate::parser::ast::{Definition, Document, FragmentSpread, InlineFragment, TypeCondition};
 use crate::validation::visitor::{Visitor, VisitorContext};
-use graphql_parser::query::{Definition, Document, FragmentSpread, InlineFragment, TypeCondition};
 use std::collections::HashMap;
 
 #[derive(Default)]
