@@ -42,7 +42,7 @@ where
 {
     Box::pin(async move {
         for selection in &ctx.items {
-            match selection {
+            match &selection.node {
                 Selection::Field(field) => {
                     if ctx.is_skip(&field.directives)? {
                         continue;

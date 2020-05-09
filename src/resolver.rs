@@ -34,7 +34,7 @@ pub fn collect_fields<'a, T: ObjectType + Send + Sync>(
     }
 
     for selection in &ctx.item.items {
-        match selection {
+        match &selection.node {
             Selection::Field(field) => {
                 if ctx.is_skip(&field.directives)? {
                     continue;
@@ -74,10 +74,10 @@ pub fn collect_fields<'a, T: ObjectType + Send + Sync>(
                                     Some(ty) => &ty,
                                     None => {
                                         return Err(Error::Query {
-                                            pos: field.position,
+                                            pos: field.position(),
                                             path: None,
                                             err: QueryError::FieldNotFound {
-                                                field_name: field.name.clone(),
+                                                field_name: field.name.clone_inner(),
                                                 object: T::type_name().to_string(),
                                             },
                                         });

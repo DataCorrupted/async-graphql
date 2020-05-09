@@ -268,11 +268,11 @@ pub struct ContextBase<'a, T> {
     pub(crate) extensions: &'a [BoxExtension],
     pub(crate) item: T,
     pub(crate) variables: &'a Variables,
-    pub(crate) variable_definitions: &'a [VariableDefinition],
+    pub(crate) variable_definitions: &'a [Spanned<VariableDefinition>],
     pub(crate) registry: &'a Registry,
     pub(crate) data: &'a Data,
     pub(crate) ctx_data: Option<&'a Data>,
-    pub(crate) fragments: &'a HashMap<String, FragmentDefinition>,
+    pub(crate) fragments: &'a HashMap<Spanned<String>, Spanned<FragmentDefinition>>,
 }
 
 impl<'a, T> Deref for ContextBase<'a, T> {
@@ -286,8 +286,8 @@ impl<'a, T> Deref for ContextBase<'a, T> {
 #[doc(hidden)]
 pub struct Environment {
     pub variables: Variables,
-    pub variable_definitions: Vec<VariableDefinition>,
-    pub fragments: HashMap<String, FragmentDefinition>,
+    pub variable_definitions: Vec<Spanned<VariableDefinition>>,
+    pub fragments: HashMap<Spanned<String>, Spanned<FragmentDefinition>>,
     pub ctx_data: Arc<Data>,
 }
 
@@ -503,7 +503,7 @@ impl<'a, T> ContextBase<'a, T> {
 
 impl<'a> ContextBase<'a, &'a Spanned<SelectionSet>> {
     #[doc(hidden)]
-    pub fn with_index(&'a self, idx: usize) -> ContextBase<'a, &'a SelectionSet> {
+    pub fn with_index(&'a self, idx: usize) -> ContextBase<'a, &'a Spanned<SelectionSet>> {
         ContextBase {
             path_node: Some(QueryPathNode {
                 parent: self.path_node.as_ref(),
@@ -530,13 +530,7 @@ impl<'a> ContextBase<'a, &'a Spanned<Field>> {
         name: &str,
         default: F,
     ) -> Result<T> {
-        match self
-            .arguments
-            .iter()
-            .find(|(n, _)| n == name)
-            .map(|(_, v)| v)
-            .cloned()
-        {
+        match self.arguments.get(name).cloned() {
             Some(value) => {
                 let value = self.resolve_input_value(value)?;
                 let res = InputValueType::parse(&value).ok_or_else(|| {

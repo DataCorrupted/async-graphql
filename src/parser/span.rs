@@ -1,5 +1,7 @@
+use std::borrow::{Borrow, BorrowMut};
 use std::cmp::Ordering;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
 /// Original position of element in source code
@@ -42,9 +44,62 @@ impl<T: fmt::Display> fmt::Display for Spanned<T> {
     }
 }
 
+impl<T: Clone> Spanned<T> {
+    #[inline]
+    pub fn clone_inner(&self) -> T {
+        self.node.clone()
+    }
+}
+
 impl<T: PartialEq> PartialEq for Spanned<T> {
     fn eq(&self, other: &Self) -> bool {
         self.node.eq(&other.node)
+    }
+}
+
+impl<T: PartialOrd> PartialOrd for Spanned<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.node.partial_cmp(&other.node)
+    }
+}
+
+impl<T: Ord> Ord for Spanned<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.node.cmp(&other.node)
+    }
+}
+
+impl<T: Ord> Eq for Spanned<T> {}
+
+impl<T> Deref for Spanned<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.node
+    }
+}
+
+impl<T> DerefMut for Spanned<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.node
+    }
+}
+
+impl<T: Hash> Hash for Spanned<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.node.hash(state)
+    }
+}
+
+impl<T: Deref<Target = Q>, Q: ?Sized> Borrow<Q> for Spanned<T> {
+    fn borrow(&self) -> &Q {
+        self.node.deref()
+    }
+}
+
+impl<T: DerefMut<Target = Q>, Q: ?Sized> BorrowMut<Q> for Spanned<T> {
+    fn borrow_mut(&mut self) -> &mut Q {
+        self.node.deref_mut()
     }
 }
 
@@ -90,11 +145,6 @@ impl<T> Spanned<T> {
     }
 
     #[inline]
-    pub fn span(&self) -> Span {
-        self.span
-    }
-
-    #[inline]
     pub fn position(&self) -> Pos {
         self.span.start
     }
@@ -102,7 +152,7 @@ impl<T> Spanned<T> {
     #[inline]
     pub fn pack<F: FnOnce(Self) -> R, R>(self, f: F) -> Spanned<R> {
         Spanned {
-            span: self.span(),
+            span: self.span,
             node: f(self),
         }
     }
@@ -110,43 +160,8 @@ impl<T> Spanned<T> {
     #[inline]
     pub fn map<F: FnOnce(T) -> R, R>(self, f: F) -> Spanned<R> {
         Spanned {
-            span: self.span(),
+            span: self.span,
             node: f(self.node),
         }
-    }
-}
-
-impl<T: Clone> Spanned<T> {
-    #[inline]
-    pub fn clone_inner(&self) -> T {
-        self.node.clone()
-    }
-}
-
-impl<T: PartialOrd> PartialOrd for Spanned<T> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.node.partial_cmp(&other.node)
-    }
-}
-
-impl<T: Ord> Ord for Spanned<T> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.node.cmp(&other.node)
-    }
-}
-
-impl<T: Ord> Eq for Spanned<T> {}
-
-impl<T> Deref for Spanned<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.node
-    }
-}
-
-impl<T> DerefMut for Spanned<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.node
     }
 }

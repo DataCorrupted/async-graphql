@@ -8,7 +8,7 @@ use crate::parser::parse_query;
 use crate::registry::CacheControl;
 use crate::validation::{check_rules, CheckResult};
 use crate::{
-    do_resolve, ContextBase, Error, ObjectType, Pos, QueryError, Result, Schema, Variables,
+    do_resolve, ContextBase, Error, ObjectType, Pos, QueryError, Result, Schema, Spanned, Variables,
 };
 use itertools::Itertools;
 use std::any::Any;
@@ -236,9 +236,13 @@ impl QueryBuilder {
 fn current_operation<'a>(
     document: &'a Document,
     operation_name: Option<&str>,
-) -> Option<(&'a SelectionSet, &'a [VariableDefinition], bool)> {
+) -> Option<(
+    &'a Spanned<SelectionSet>,
+    &'a [Spanned<VariableDefinition>],
+    bool,
+)> {
     for definition in &document.definitions {
-        match definition {
+        match &definition.node {
             Definition::Operation(operation_definition) => match operation_definition {
                 OperationDefinition::SelectionSet(s) => {
                     return Some((s, &[], true));

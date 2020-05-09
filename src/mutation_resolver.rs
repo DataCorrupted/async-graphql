@@ -65,7 +65,7 @@ fn do_resolve<'a, T: ObjectType + Send + Sync>(
                                 Some(ty) => &ty,
                                 None => {
                                     return Err(Error::Query {
-                                        pos: field.position,
+                                        pos: field.position(),
                                         path: None,
                                         err: QueryError::FieldNotFound {
                                             field_name: field.name.clone_inner(),
@@ -108,7 +108,7 @@ fn do_resolve<'a, T: ObjectType + Send + Sync>(
                         .await?;
                     } else {
                         return Err(Error::Query {
-                            pos: fragment_spread.position,
+                            pos: fragment_spread.position(),
                             path: None,
                             err: QueryError::UnknownFragment {
                                 name: fragment_spread.fragment_name.clone_inner(),
