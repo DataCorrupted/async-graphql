@@ -27,7 +27,7 @@ struct FindConflicts<'a, 'ctx> {
 impl<'a, 'ctx> FindConflicts<'a, 'ctx> {
     pub fn find(&mut self, selection_set: &'a SelectionSet) {
         for selection in &selection_set.items {
-            match selection {
+            match &selection.node {
                 Selection::Field(field) => {
                     let output_name = field
                         .alias

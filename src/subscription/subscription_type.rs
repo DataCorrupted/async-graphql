@@ -81,7 +81,9 @@ where
                         continue;
                     }
 
-                    if let Some(TypeCondition::On(name)) = &inline_fragment.type_condition {
+                    if let Some(TypeCondition::On(name)) =
+                        inline_fragment.type_condition.map(|v| &v.node)
+                    {
                         if name.as_str() == Subscription::type_name() {
                             create_subscription_stream(
                                 schema,

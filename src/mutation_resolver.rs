@@ -121,11 +121,12 @@ fn do_resolve<'a, T: ObjectType + Send + Sync>(
                         continue;
                     }
 
-                    if let Some(TypeCondition::On(name)) = &inline_fragment.type_condition {
+                    if let Some(TypeCondition::On(name)) =
+                        inline_fragment.type_condition.map(|v| &v.node)
+                    {
                         let mut futures = Vec::new();
                         root.collect_inline_fields(
                             name,
-                            inline_fragment.position,
                             &ctx.with_selection_set(&inline_fragment.selection_set),
                             &mut futures,
                         )?;

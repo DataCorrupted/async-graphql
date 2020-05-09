@@ -92,7 +92,7 @@ pub trait ObjectType: OutputValueType {
                 .registry
                 .implements
                 .get(Self::type_name().as_ref())
-                .map(|ty| ty.contains(name))
+                .map(|ty| ty.contains(name.as_str()))
                 .unwrap_or_default()
         {
             crate::collect_fields(ctx, self, futures)

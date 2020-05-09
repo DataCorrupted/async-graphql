@@ -16,7 +16,7 @@ impl<'a> Visitor<'a> for ArgumentsOfCorrectType<'a> {
         self.current_args = ctx
             .registry
             .directives
-            .get(&directive.name)
+            .get(directive.name.as_str())
             .map(|d| &d.args);
     }
 

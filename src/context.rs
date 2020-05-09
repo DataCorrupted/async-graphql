@@ -46,9 +46,8 @@ impl DerefMut for Variables {
 impl Variables {
     /// Parse variables from JSON object.
     pub fn parse_from_json(value: serde_json::Value) -> Result<Self> {
-        let gql_value = json_value_to_gql_value(value);
-        if let Value::Object(_) = gql_value {
-            Ok(Variables(gql_value))
+        if let Value::Object(obj) = json_value_to_gql_value(value) {
+            Ok(Variables(Value::Object(obj)))
         } else {
             Ok(Default::default())
         }
@@ -77,11 +76,7 @@ impl Variables {
                 if let Value::List(ls) = current {
                     if let Some(value) = ls.get_mut(idx as usize) {
                         if !has_next {
-                            *value = Spanned::new_default(Value::String(file_string(
-                                filename,
-                                content_type,
-                                path,
-                            )));
+                            *value = Value::String(file_string(filename, content_type, path));
                             return;
                         } else {
                             current = value;
@@ -93,11 +88,7 @@ impl Variables {
             } else if let Value::Object(obj) = current {
                 if let Some(value) = obj.get_mut(s) {
                     if !has_next {
-                        *value = Spanned::new_default(Value::String(file_string(
-                            filename,
-                            content_type,
-                            path,
-                        )));
+                        *value = Value::String(file_string(filename, content_type, path));
                         return;
                     } else {
                         current = value;
@@ -272,7 +263,7 @@ pub struct ContextBase<'a, T> {
     pub(crate) registry: &'a Registry,
     pub(crate) data: &'a Data,
     pub(crate) ctx_data: Option<&'a Data>,
-    pub(crate) fragments: &'a HashMap<Spanned<String>, Spanned<FragmentDefinition>>,
+    pub(crate) fragments: &'a HashMap<String, FragmentDefinition>,
 }
 
 impl<'a, T> Deref for ContextBase<'a, T> {
@@ -287,7 +278,7 @@ impl<'a, T> Deref for ContextBase<'a, T> {
 pub struct Environment {
     pub variables: Variables,
     pub variable_definitions: Vec<Spanned<VariableDefinition>>,
-    pub fragments: HashMap<Spanned<String>, Spanned<FragmentDefinition>>,
+    pub fragments: HashMap<String, FragmentDefinition>,
     pub ctx_data: Arc<Data>,
 }
 
@@ -393,7 +384,7 @@ impl<'a, T> ContextBase<'a, T> {
             .iter()
             .find(|def| def.name.as_str() == name);
         if let Some(def) = def {
-            if let Some(var_value) = self.variables.get(&def.name) {
+            if let Some(var_value) = self.variables.get(def.name.as_str()) {
                 return Ok(var_value.clone());
             } else if let Some(default) = &def.default_value {
                 return Ok(default.clone_inner());
@@ -405,17 +396,13 @@ impl<'a, T> ContextBase<'a, T> {
         .into_error(pos))
     }
 
-    fn resolve_input_value(&self, mut value: Spanned<Value>) -> Result<Spanned<Value>> {
+    fn resolve_input_value(&self, mut value: Value, pos: Pos) -> Result<Value> {
         match value {
-            Value::Variable(var_name) => self
-                .var_value(&var_name, value.position())
-                .map(|var_value| value.with(var_value)),
+            Value::Variable(var_name) => self.var_value(&var_name, pos),
             Value::List(ref mut ls) => {
                 for value in ls {
                     if let Value::Variable(var_name) = value {
-                        *value = self
-                            .var_value(&var_name, value.position())
-                            .map(|var_value| value.with(var_value))?;
+                        *value = self.var_value(&var_name, pos)?;
                     }
                 }
                 Ok(value)
@@ -423,9 +410,7 @@ impl<'a, T> ContextBase<'a, T> {
             Value::Object(ref mut obj) => {
                 for value in obj.values_mut() {
                     if let Value::Variable(var_name) = value {
-                        *value = self
-                            .var_value(&var_name, value.position())
-                            .map(|var_value| value.with(var_value))?;
+                        *value = self.var_value(&var_name, pos)?;
                     }
                 }
                 Ok(value)
@@ -438,19 +423,14 @@ impl<'a, T> ContextBase<'a, T> {
     pub fn is_skip(&self, directives: &[Spanned<Directive>]) -> Result<bool> {
         for directive in directives {
             if directive.name.as_str() == "skip" {
-                if let Some(value) = directive
-                    .arguments
-                    .iter()
-                    .find(|(name, _)| name == "if")
-                    .map(|(_, value)| value)
-                {
-                    let value = self.resolve_input_value(value.clone(), directive.position)?;
+                if let Some(value) = directive.arguments.get("if") {
+                    let value = self.resolve_input_value(value.clone_inner(), value.position())?;
                     let res: bool = InputValueType::parse(&value).ok_or_else(|| {
                         QueryError::ExpectedType {
                             expect: bool::qualified_type_name(),
-                            actual: value.into_inner(),
+                            actual: value,
                         }
-                        .into_error(directive.position)
+                        .into_error(directive.position())
                     })?;
                     if res {
                         return Ok(true);
@@ -461,22 +441,17 @@ impl<'a, T> ContextBase<'a, T> {
                         arg_name: "if",
                         arg_type: "Boolean!",
                     }
-                    .into_error(directive.position));
+                    .into_error(directive.position()));
                 }
             } else if directive.name.as_str() == "include" {
-                if let Some(value) = directive
-                    .arguments
-                    .iter()
-                    .find(|(name, _)| name == "if")
-                    .map(|(_, value)| value)
-                {
-                    let value = self.resolve_input_value(value.clone(), directive.position)?;
+                if let Some(value) = directive.arguments.get("if") {
+                    let value = self.resolve_input_value(value.clone_inner(), value.position())?;
                     let res: bool = InputValueType::parse(&value).ok_or_else(|| {
                         QueryError::ExpectedType {
                             expect: bool::qualified_type_name(),
-                            actual: value.into_inner(),
+                            actual: value,
                         }
-                        .into_error(directive.position)
+                        .into_error(directive.position())
                     })?;
                     if !res {
                         return Ok(true);
@@ -487,13 +462,13 @@ impl<'a, T> ContextBase<'a, T> {
                         arg_name: "if",
                         arg_type: "Boolean!",
                     }
-                    .into_error(directive.position));
+                    .into_error(directive.position()));
                 }
             } else {
                 return Err(QueryError::UnknownDirective {
                     name: directive.name.clone_inner(),
                 }
-                .into_error(directive.position));
+                .into_error(directive.position()));
             }
         }
 
@@ -532,12 +507,12 @@ impl<'a> ContextBase<'a, &'a Spanned<Field>> {
     ) -> Result<T> {
         match self.arguments.get(name).cloned() {
             Some(value) => {
-                let value = self.resolve_input_value(value)?;
+                let pos = value.position();
+                let value = self.resolve_input_value(value.into_inner(), pos)?;
                 let res = InputValueType::parse(&value).ok_or_else(|| {
-                    let pos = value.position();
                     QueryError::ExpectedType {
                         expect: T::qualified_type_name(),
-                        actual: value.into_inner(),
+                        actual: value,
                     }
                     .into_error(pos)
                 })?;

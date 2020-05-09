@@ -32,8 +32,8 @@ pub struct Span {
     pub end: Pos,
 }
 
-#[derive(Clone, Debug, Copy)]
-pub struct Spanned<T> {
+#[derive(Clone, Debug, Copy, Default)]
+pub struct Spanned<T: ?Sized> {
     pub span: Span,
     pub node: T,
 }
@@ -71,16 +71,16 @@ impl<T: Ord> Ord for Spanned<T> {
 
 impl<T: Ord> Eq for Spanned<T> {}
 
-impl<T> Deref for Spanned<T> {
+impl<T: ?Sized> Deref for Spanned<T> {
     type Target = T;
 
-    fn deref(&self) -> &Self::Target {
+    fn deref(&self) -> &T {
         &self.node
     }
 }
 
-impl<T> DerefMut for Spanned<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
+impl<T: ?Sized> DerefMut for Spanned<T> {
+    fn deref_mut(&mut self) -> &mut T {
         &mut self.node
     }
 }
@@ -91,15 +91,15 @@ impl<T: Hash> Hash for Spanned<T> {
     }
 }
 
-impl<T: Deref<Target = Q>, Q: ?Sized> Borrow<Q> for Spanned<T> {
-    fn borrow(&self) -> &Q {
-        self.node.deref()
+impl Borrow<str> for Spanned<String> {
+    fn borrow(&self) -> &str {
+        self.node.as_str()
     }
 }
 
-impl<T: DerefMut<Target = Q>, Q: ?Sized> BorrowMut<Q> for Spanned<T> {
-    fn borrow_mut(&mut self) -> &mut Q {
-        self.node.deref_mut()
+impl BorrowMut<str> for Spanned<String> {
+    fn borrow_mut(&mut self) -> &mut str {
+        self.node.as_mut_str()
     }
 }
 

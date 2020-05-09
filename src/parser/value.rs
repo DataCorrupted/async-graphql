@@ -1,4 +1,3 @@
-use crate::parser::span::Spanned;
 use std::collections::BTreeMap;
 use std::fmt;
 
@@ -12,8 +11,8 @@ pub enum Value {
     String(String),
     Boolean(bool),
     Enum(String),
-    List(Vec<Spanned<Value>>),
-    Object(BTreeMap<Spanned<String>, Spanned<Value>>),
+    List(Vec<Value>),
+    Object(BTreeMap<String, Value>),
 }
 
 impl PartialEq for Value {

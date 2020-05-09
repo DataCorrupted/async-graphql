@@ -83,10 +83,10 @@ impl<T: ObjectType + Send + Sync> ObjectType for QueryRoot<T> {
         if ctx.name.as_str() == "__schema" {
             if self.disable_introspection {
                 return Err(Error::Query {
-                    pos: ctx.position,
+                    pos: ctx.position(),
                     path: Some(ctx.path_node.as_ref().unwrap().to_json()),
                     err: QueryError::FieldNotFound {
-                        field_name: ctx.name.clone(),
+                        field_name: ctx.name.clone_inner(),
                         object: Self::type_name().to_string(),
                     },
                 });
@@ -102,7 +102,7 @@ impl<T: ObjectType + Send + Sync> ObjectType for QueryRoot<T> {
             )
             .await;
         } else if ctx.name.as_str() == "__type" {
-            let type_name: String = ctx.param_value("name", ctx.position(), || Value::Null)?;
+            let type_name: String = ctx.param_value("name", || Value::Null)?;
             let ctx_obj = ctx.with_selection_set(&ctx.selection_set);
             return OutputValueType::resolve(
                 &ctx.registry

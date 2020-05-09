@@ -249,29 +249,34 @@ where
         let mut subscription = None;
 
         for definition in document.definitions {
-            match definition {
-                Definition::Operation(OperationDefinition::Subscription(s)) => {
-                    if subscription.is_none()
-                        && (s.name.as_deref() == operation_name || operation_name.is_none())
-                    {
-                        subscription = Some(s);
+            match definition.node {
+                Definition::Operation(operation) => {
+                    if let OperationDefinition::Subscription(s) = operation.node {
+                        if subscription.is_none()
+                            && (s.name.as_ref().map(|v| v.as_str()) == operation_name
+                                || operation_name.is_none())
+                        {
+                            subscription = Some(s);
+                        }
                     }
                 }
                 Definition::Fragment(fragment) => {
-                    fragments.insert(fragment.name.clone(), fragment);
+                    fragments.insert(fragment.name.clone_inner(), fragment.into_inner());
                 }
                 _ => {}
             }
         }
 
-        let subscription = subscription.ok_or(if let Some(name) = operation_name {
-            QueryError::UnknownOperationNamed {
-                name: name.to_string(),
-            }
-            .into_error(Pos::default())
-        } else {
-            QueryError::MissingOperation.into_error(Pos::default())
-        })?;
+        let subscription = subscription
+            .ok_or(if let Some(name) = operation_name {
+                QueryError::UnknownOperationNamed {
+                    name: name.to_string(),
+                }
+                .into_error(Pos::default())
+            } else {
+                QueryError::MissingOperation.into_error(Pos::default())
+            })?
+            .into_inner();
 
         let resolve_id = AtomicUsize::default();
         let environment = Arc::new(Environment {

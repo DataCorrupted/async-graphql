@@ -182,8 +182,8 @@ impl QueryBuilder {
             })?;
 
         for definition in &document.definitions {
-            if let Definition::Fragment(fragment) = &definition {
-                fragments.insert(fragment.name.clone(), fragment.clone());
+            if let Definition::Fragment(fragment) = &definition.node {
+                fragments.insert(fragment.name.clone_inner(), fragment.clone_inner());
             }
         }
 
@@ -243,21 +243,21 @@ fn current_operation<'a>(
 )> {
     for definition in &document.definitions {
         match &definition.node {
-            Definition::Operation(operation_definition) => match operation_definition {
+            Definition::Operation(operation_definition) => match &operation_definition.node {
                 OperationDefinition::SelectionSet(s) => {
                     return Some((s, &[], true));
                 }
                 OperationDefinition::Query(query)
                     if query.name.is_none()
                         || operation_name.is_none()
-                        || query.name.as_deref() == operation_name.as_deref() =>
+                        || query.name.map(|name| name.as_str()) == operation_name.as_deref() =>
                 {
                     return Some((&query.selection_set, &query.variable_definitions, true));
                 }
                 OperationDefinition::Mutation(mutation)
                     if mutation.name.is_none()
                         || operation_name.is_none()
-                        || mutation.name.as_deref() == operation_name.as_deref() =>
+                        || mutation.name.map(|name| name.as_str()) == operation_name.as_deref() =>
                 {
                     return Some((
                         &mutation.selection_set,
@@ -268,7 +268,8 @@ fn current_operation<'a>(
                 OperationDefinition::Subscription(subscription)
                     if subscription.name.is_none()
                         || operation_name.is_none()
-                        || subscription.name.as_deref() == operation_name.as_deref() =>
+                        || subscription.name.map(|name| name.as_str())
+                            == operation_name.as_deref() =>
                 {
                     return None;
                 }

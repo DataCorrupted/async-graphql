@@ -25,7 +25,7 @@ pub fn collect_fields<'a, T: ObjectType + Send + Sync>(
 ) -> Result<()> {
     if ctx.items.is_empty() {
         return Err(Error::Query {
-            pos: ctx.span.0,
+            pos: ctx.position(),
             path: None,
             err: QueryError::MustHaveSubFields {
                 object: T::type_name().to_string(),
@@ -120,10 +120,10 @@ pub fn collect_fields<'a, T: ObjectType + Send + Sync>(
                     )?;
                 } else {
                     return Err(Error::Query {
-                        pos: fragment_spread.position,
+                        pos: fragment_spread.position(),
                         path: None,
                         err: QueryError::UnknownFragment {
-                            name: fragment_spread.fragment_name.clone(),
+                            name: fragment_spread.fragment_name.clone_inner(),
                         },
                     });
                 }
@@ -133,7 +133,7 @@ pub fn collect_fields<'a, T: ObjectType + Send + Sync>(
                     continue;
                 }
 
-                if let Some(TypeCondition::On(name)) = &inline_fragment.type_condition {
+                if let Some(TypeCondition::On(name)) = inline_fragment.type_condition.as_deref() {
                     root.collect_inline_fields(
                         name,
                         &ctx.with_selection_set(&inline_fragment.selection_set),

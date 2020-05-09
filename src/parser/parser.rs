@@ -110,7 +110,7 @@ fn parse_named_operation_definition(pair: Pair<Rule>) -> Spanned<OperationDefini
     }
 }
 
-fn parse_default_value(pair: Pair<Rule>) -> Spanned<Value> {
+fn parse_default_value(pair: Pair<Rule>) -> Value {
     for pair in pair.into_inner() {
         match pair.as_rule() {
             Rule::value => return parse_value(pair),
@@ -144,7 +144,9 @@ fn parse_variable_definition(pair: Pair<Rule>) -> Spanned<VariableDefinition> {
         match pair.as_rule() {
             Rule::variable => variable = Some(parse_variable(pair)),
             Rule::type_ => ty = Some(parse_type(pair)),
-            Rule::default_value => default_value = Some(parse_default_value(pair)),
+            Rule::default_value => {
+                default_value = Some(Spanned::new(parse_default_value(pair), pair.as_span()))
+            }
             _ => unreachable!(),
         }
     }
@@ -189,45 +191,53 @@ fn parse_variable(pair: Pair<Rule>) -> Spanned<String> {
     unreachable!()
 }
 
-fn parse_value(pair: Pair<Rule>) -> Spanned<Value> {
+fn parse_value(pair: Pair<Rule>) -> Value {
     let pair = pair.into_inner().next().unwrap();
     match pair.as_rule() {
         Rule::object => parse_object_value(pair),
         Rule::array => parse_array_value(pair),
-        Rule::variable => parse_variable(pair).map(|var| Value::Variable(var)),
-        Rule::float => Spanned::new(Value::Float(pair.as_str().parse().unwrap()), pair.as_span()),
-        Rule::int => Spanned::new(Value::Int(pair.as_str().parse().unwrap()), pair.as_span()),
-        Rule::string => Spanned::new(Value::String(pair.as_str().to_string()), pair.as_span()),
-        Rule::name => Spanned::new(Value::Enum(pair.as_str().to_string()), pair.as_span()),
-        Rule::boolean => Spanned::new(
-            Value::Boolean(match pair.as_str() {
-                "true" => true,
-                "false" => false,
-                _ => unreachable!(),
-            }),
-            pair.as_span(),
-        ),
-        Rule::null => Spanned::new(Value::Null, pair.as_span()),
+        Rule::variable => Value::Variable(parse_variable(pair).into_inner()),
+        Rule::float => Value::Float(pair.as_str().parse().unwrap()),
+        Rule::int => Value::Int(pair.as_str().parse().unwrap()),
+        Rule::string => Value::String(pair.as_str().to_string()),
+        Rule::name => Value::Enum(pair.as_str().to_string()),
+        Rule::boolean => Value::Boolean(match pair.as_str() {
+            "true" => true,
+            "false" => false,
+            _ => unreachable!(),
+        }),
+        Rule::null => Value::Null,
         _ => unreachable!(),
     }
 }
 
-fn parse_object_value(pair: Pair<Rule>) -> Spanned<Value> {
-    let span = pair.as_span();
+fn parse_object_pair(pair: Pair<Rule>) -> (String, Value) {
+    let mut name = None;
+    let mut value = None;
+    for pair in pair.into_inner() {
+        match pair.as_rule() {
+            Rule::name => name = Some(pair.as_str().to_string()),
+            Rule::value => value = Some(parse_value(pair)),
+            _ => unreachable!(),
+        }
+    }
+    (name.unwrap(), value.unwrap())
+}
+
+fn parse_object_value(pair: Pair<Rule>) -> Value {
     let mut map = BTreeMap::new();
     for pair in pair.into_inner() {
         match pair.as_rule() {
             Rule::pair => {
-                map.extend(std::iter::once(parse_pair(pair)));
+                map.extend(std::iter::once(parse_object_pair(pair)));
             }
             _ => unreachable!(),
         }
     }
-    Spanned::new(Value::Object(map), span)
+    Value::Object(map)
 }
 
-fn parse_array_value(pair: Pair<Rule>) -> Spanned<Value> {
-    let span = pair.as_span();
+fn parse_array_value(pair: Pair<Rule>) -> Value {
     let mut array = Vec::new();
     for pair in pair.into_inner() {
         match pair.as_rule() {
@@ -237,7 +247,7 @@ fn parse_array_value(pair: Pair<Rule>) -> Spanned<Value> {
             _ => unreachable!(),
         }
     }
-    Spanned::new(Value::List(array), span)
+    Value::List(array)
 }
 
 fn parse_pair(pair: Pair<Rule>) -> (Spanned<String>, Spanned<Value>) {
@@ -246,7 +256,7 @@ fn parse_pair(pair: Pair<Rule>) -> (Spanned<String>, Spanned<Value>) {
     for pair in pair.into_inner() {
         match pair.as_rule() {
             Rule::name => name = Some(Spanned::new(pair.as_str().to_string(), pair.as_span())),
-            Rule::value => value = Some(parse_value(pair)),
+            Rule::value => value = Some(Spanned::new(parse_value(pair), pair.as_span())),
             _ => unreachable!(),
         }
     }

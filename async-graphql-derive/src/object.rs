@@ -325,7 +325,9 @@ pub fn generate(object_args: &args::Object, item_impl: &mut ItemImpl) -> Result<
                             let repr = build_value_repr(&crate_name, &default);
                             quote! {|| #repr }
                         }
-                        None => quote! { || #crate_name::Value::Null },
+                        None => {
+                            quote! { || #crate_name::Value::Null }
+                        }
                     };
 
                     get_params.push(quote! {
@@ -467,7 +469,7 @@ pub fn generate(object_args: &args::Object, item_impl: &mut ItemImpl) -> Result<
                     #crate_name::Value::Object(params) => params,
                     _ => return Err(#crate_name::QueryError::EntityNotFound.into_error(ctx.position())),
                 };
-                let typename = if let Some(#crate_name::Value::String(typename)) = params.get("__typename").map(|v| &v.node) {
+                let typename = if let Some(#crate_name::Value::String(typename)) = params.get("__typename") {
                     typename
                 } else {
                     return Err(#crate_name::QueryError::TypeNameNotExists.into_error(ctx.position()));
@@ -484,8 +486,5 @@ pub fn generate(object_args: &args::Object, item_impl: &mut ItemImpl) -> Result<
             }
         }
     };
-    if gql_typename == "__Type" {
-        println!("{}", expanded);
-    }
     Ok(expanded.into())
 }

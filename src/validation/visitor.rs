@@ -4,7 +4,7 @@ use crate::parser::ast::{
     OperationDefinition, Selection, SelectionSet, TypeCondition, VariableDefinition,
 };
 use crate::registry::{self, Type, TypeName};
-use crate::{Pos, Value};
+use crate::{Pos, Spanned, Value};
 use std::collections::HashMap;
 
 pub struct VisitorContext<'a> {
@@ -12,7 +12,7 @@ pub struct VisitorContext<'a> {
     pub errors: Vec<RuleError>,
     type_stack: Vec<Option<&'a registry::Type>>,
     input_type: Vec<Option<TypeName<'a>>>,
-    fragments: HashMap<&'a str, &'a FragmentDefinition>,
+    fragments: HashMap<&'a str, &'a Spanned<FragmentDefinition>>,
 }
 
 impl<'a> VisitorContext<'a> {
@@ -83,7 +83,7 @@ impl<'a> VisitorContext<'a> {
         self.fragments.contains_key(name)
     }
 
-    pub fn fragment(&self, name: &str) -> Option<&'a FragmentDefinition> {
+    pub fn fragment(&self, name: &str) -> Option<&'a Spanned<FragmentDefinition>> {
         self.fragments.get(name).copied()
     }
 }
@@ -95,104 +95,124 @@ pub trait Visitor<'a> {
     fn enter_operation_definition(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _operation_definition: &'a OperationDefinition,
+        _operation_definition: &'a Spanned<OperationDefinition>,
     ) {
     }
     fn exit_operation_definition(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _operation_definition: &'a OperationDefinition,
+        _operation_definition: &'a Spanned<OperationDefinition>,
     ) {
     }
 
     fn enter_fragment_definition(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _fragment_definition: &'a FragmentDefinition,
+        _fragment_definition: &'a Spanned<FragmentDefinition>,
     ) {
     }
     fn exit_fragment_definition(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _fragment_definition: &'a FragmentDefinition,
+        _fragment_definition: &'a Spanned<FragmentDefinition>,
     ) {
     }
 
     fn enter_variable_definition(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _variable_definition: &'a VariableDefinition,
+        _variable_definition: &'a Spanned<VariableDefinition>,
     ) {
     }
     fn exit_variable_definition(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _variable_definition: &'a VariableDefinition,
+        _variable_definition: &'a Spanned<VariableDefinition>,
     ) {
     }
 
-    fn enter_directive(&mut self, _ctx: &mut VisitorContext<'a>, _directive: &'a Directive) {}
-    fn exit_directive(&mut self, _ctx: &mut VisitorContext<'a>, _directive: &'a Directive) {}
+    fn enter_directive(
+        &mut self,
+        _ctx: &mut VisitorContext<'a>,
+        _directive: &'a Spanned<Directive>,
+    ) {
+    }
+    fn exit_directive(
+        &mut self,
+        _ctx: &mut VisitorContext<'a>,
+        _directive: &'a Spanned<Directive>,
+    ) {
+    }
 
     fn enter_argument(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
         _pos: Pos,
-        _name: &'a str,
-        _value: &'a Value,
+        _name: &'a Spanned<String>,
+        _value: &'a Spanned<Value>,
     ) {
     }
     fn exit_argument(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
         _pos: Pos,
-        _name: &'a str,
-        _value: &'a Value,
+        _name: &'a Spanned<String>,
+        _value: &'a Spanned<Value>,
     ) {
     }
 
     fn enter_selection_set(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _selection_set: &'a SelectionSet,
+        _selection_set: &'a Spanned<SelectionSet>,
     ) {
     }
     fn exit_selection_set(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _selection_set: &'a SelectionSet,
+        _selection_set: &'a Spanned<SelectionSet>,
     ) {
     }
 
-    fn enter_selection(&mut self, _ctx: &mut VisitorContext<'a>, _selection: &'a Selection) {}
-    fn exit_selection(&mut self, _ctx: &mut VisitorContext<'a>, _selection: &'a Selection) {}
+    fn enter_selection(
+        &mut self,
+        _ctx: &mut VisitorContext<'a>,
+        _selection: &'a Spanned<Selection>,
+    ) {
+    }
+    fn exit_selection(
+        &mut self,
+        _ctx: &mut VisitorContext<'a>,
+        _selection: &'a Spanned<Selection>,
+    ) {
+    }
 
-    fn enter_field(&mut self, _ctx: &mut VisitorContext<'a>, _field: &'a Field) {}
-    fn exit_field(&mut self, _ctx: &mut VisitorContext<'a>, _field: &'a Field) {}
+    fn enter_field(&mut self, _ctx: &mut VisitorContext<'a>, _field: &'a Spanned<Field>) {}
+    fn exit_field(&mut self, _ctx: &mut VisitorContext<'a>, _field: &'a Spanned<Field>) {}
 
     fn enter_fragment_spread(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _fragment_spread: &'a FragmentSpread,
+        _fragment_spread: &'a Spanned<FragmentSpread>,
     ) {
     }
     fn exit_fragment_spread(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _fragment_spread: &'a FragmentSpread,
+        _fragment_spread: &'a Spanned<FragmentSpread>,
     ) {
     }
 
     fn enter_inline_fragment(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _inline_fragment: &'a InlineFragment,
+        _inline_fragment: &'a Spanned<InlineFragment>,
     ) {
     }
     fn exit_inline_fragment(
         &mut self,
         _ctx: &mut VisitorContext<'a>,
-        _inline_fragment: &'a InlineFragment,
+        _inline_fragment: &'a Spanned<InlineFragment>,
     ) {
     }
 
@@ -250,7 +270,7 @@ where
     fn enter_operation_definition(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        operation_definition: &'a OperationDefinition,
+        operation_definition: &'a Spanned<OperationDefinition>,
     ) {
         self.0.enter_operation_definition(ctx, operation_definition);
         self.1.enter_operation_definition(ctx, operation_definition);
@@ -259,7 +279,7 @@ where
     fn exit_operation_definition(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        operation_definition: &'a OperationDefinition,
+        operation_definition: &'a Spanned<perationDefinition>,
     ) {
         self.0.exit_operation_definition(ctx, operation_definition);
         self.1.exit_operation_definition(ctx, operation_definition);
@@ -268,7 +288,7 @@ where
     fn enter_fragment_definition(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        fragment_definition: &'a FragmentDefinition,
+        fragment_definition: &'a Spanned<FragmentDefinition>,
     ) {
         self.0.enter_fragment_definition(ctx, fragment_definition);
         self.1.enter_fragment_definition(ctx, fragment_definition);
@@ -277,7 +297,7 @@ where
     fn exit_fragment_definition(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        fragment_definition: &'a FragmentDefinition,
+        fragment_definition: &'a Spanned<FragmentDefinition>,
     ) {
         self.0.exit_fragment_definition(ctx, fragment_definition);
         self.1.exit_fragment_definition(ctx, fragment_definition);
@@ -286,7 +306,7 @@ where
     fn enter_variable_definition(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        variable_definition: &'a VariableDefinition,
+        variable_definition: &'a Spanned<VariableDefinition>,
     ) {
         self.0.enter_variable_definition(ctx, variable_definition);
         self.1.enter_variable_definition(ctx, variable_definition);
@@ -295,18 +315,18 @@ where
     fn exit_variable_definition(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        variable_definition: &'a VariableDefinition,
+        variable_definition: &'a Spanned<VariableDefinition>,
     ) {
         self.0.exit_variable_definition(ctx, variable_definition);
         self.1.exit_variable_definition(ctx, variable_definition);
     }
 
-    fn enter_directive(&mut self, ctx: &mut VisitorContext<'a>, directive: &'a Directive) {
+    fn enter_directive(&mut self, ctx: &mut VisitorContext<'a>, directive: &'a Spanned<Directive>) {
         self.0.enter_directive(ctx, directive);
         self.1.enter_directive(ctx, directive);
     }
 
-    fn exit_directive(&mut self, ctx: &mut VisitorContext<'a>, directive: &'a Directive) {
+    fn exit_directive(&mut self, ctx: &mut VisitorContext<'a>, directive: &'a Spanned<Directive>) {
         self.0.exit_directive(ctx, directive);
         self.1.exit_directive(ctx, directive);
     }
@@ -315,8 +335,8 @@ where
         &mut self,
         ctx: &mut VisitorContext<'a>,
         pos: Pos,
-        name: &'a str,
-        value: &'a Value,
+        name: &'a Spanned<String>,
+        value: &'a Spanned<Value>,
     ) {
         self.0.enter_argument(ctx, pos, name, value);
         self.1.enter_argument(ctx, pos, name, value);
@@ -326,8 +346,8 @@ where
         &mut self,
         ctx: &mut VisitorContext<'a>,
         pos: Pos,
-        name: &'a str,
-        value: &'a Value,
+        name: &'a Spanned<String>,
+        value: &'a Spanned<Value>,
     ) {
         self.0.exit_argument(ctx, pos, name, value);
         self.1.exit_argument(ctx, pos, name, value);
@@ -336,7 +356,7 @@ where
     fn enter_selection_set(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        selection_set: &'a SelectionSet,
+        selection_set: &'a Spanned<SelectionSet>,
     ) {
         self.0.enter_selection_set(ctx, selection_set);
         self.1.enter_selection_set(ctx, selection_set);
@@ -345,28 +365,28 @@ where
     fn exit_selection_set(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        selection_set: &'a SelectionSet,
+        selection_set: &'a Spanned<SelectionSet>,
     ) {
         self.0.exit_selection_set(ctx, selection_set);
         self.1.exit_selection_set(ctx, selection_set);
     }
 
-    fn enter_selection(&mut self, ctx: &mut VisitorContext<'a>, selection: &'a Selection) {
+    fn enter_selection(&mut self, ctx: &mut VisitorContext<'a>, selection: &'a Spanned<Selection>) {
         self.0.enter_selection(ctx, selection);
         self.1.enter_selection(ctx, selection);
     }
 
-    fn exit_selection(&mut self, ctx: &mut VisitorContext<'a>, selection: &'a Selection) {
+    fn exit_selection(&mut self, ctx: &mut VisitorContext<'a>, selection: &'a Spanned<Selection>) {
         self.0.exit_selection(ctx, selection);
         self.1.exit_selection(ctx, selection);
     }
 
-    fn enter_field(&mut self, ctx: &mut VisitorContext<'a>, field: &'a Field) {
+    fn enter_field(&mut self, ctx: &mut VisitorContext<'a>, field: &'a Spanned<Field>) {
         self.0.enter_field(ctx, field);
         self.1.enter_field(ctx, field);
     }
 
-    fn exit_field(&mut self, ctx: &mut VisitorContext<'a>, field: &'a Field) {
+    fn exit_field(&mut self, ctx: &mut VisitorContext<'a>, field: &'a Spanned<Field>) {
         self.0.exit_field(ctx, field);
         self.1.exit_field(ctx, field);
     }
@@ -374,7 +394,7 @@ where
     fn enter_fragment_spread(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        fragment_spread: &'a FragmentSpread,
+        fragment_spread: &'a Spanned<FragmentSpread>,
     ) {
         self.0.enter_fragment_spread(ctx, fragment_spread);
         self.1.enter_fragment_spread(ctx, fragment_spread);
@@ -383,7 +403,7 @@ where
     fn exit_fragment_spread(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        fragment_spread: &'a FragmentSpread,
+        fragment_spread: &'a Spanned<FragmentSpread>,
     ) {
         self.0.exit_fragment_spread(ctx, fragment_spread);
         self.1.exit_fragment_spread(ctx, fragment_spread);
@@ -392,7 +412,7 @@ where
     fn enter_inline_fragment(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        inline_fragment: &'a InlineFragment,
+        inline_fragment: &'a Spanned<InlineFragment>,
     ) {
         self.0.enter_inline_fragment(ctx, inline_fragment);
         self.1.enter_inline_fragment(ctx, inline_fragment);
@@ -401,7 +421,7 @@ where
     fn exit_inline_fragment(
         &mut self,
         ctx: &mut VisitorContext<'a>,
-        inline_fragment: &'a InlineFragment,
+        inline_fragment: &'a Spanned<InlineFragment>,
     ) {
         self.0.exit_inline_fragment(ctx, inline_fragment);
         self.1.exit_inline_fragment(ctx, inline_fragment);
@@ -420,7 +440,7 @@ fn visit_definitions<'a, V: Visitor<'a>>(
     doc: &'a Document,
 ) {
     for d in &doc.definitions {
-        match d {
+        match &d.node {
             Definition::Operation(operation) => {
                 visit_operation_definition(v, ctx, operation);
             }
@@ -437,10 +457,10 @@ fn visit_definitions<'a, V: Visitor<'a>>(
 fn visit_operation_definition<'a, V: Visitor<'a>>(
     v: &mut V,
     ctx: &mut VisitorContext<'a>,
-    operation: &'a OperationDefinition,
+    operation: &'a Spanned<OperationDefinition>,
 ) {
     v.enter_operation_definition(ctx, operation);
-    match operation {
+    match &operation.node {
         OperationDefinition::SelectionSet(selection_set) => {
             ctx.with_type(Some(&ctx.registry.types[&ctx.registry.query_type]), |ctx| {
                 visit_selection_set(v, ctx, selection_set)
@@ -488,7 +508,7 @@ fn visit_operation_definition<'a, V: Visitor<'a>>(
 fn visit_selection_set<'a, V: Visitor<'a>>(
     v: &mut V,
     ctx: &mut VisitorContext<'a>,
-    selection_set: &'a SelectionSet,
+    selection_set: &'a Spanned<SelectionSet>,
 ) {
     if !selection_set.items.is_empty() {
         v.enter_selection_set(ctx, selection_set);
@@ -502,12 +522,12 @@ fn visit_selection_set<'a, V: Visitor<'a>>(
 fn visit_selection<'a, V: Visitor<'a>>(
     v: &mut V,
     ctx: &mut VisitorContext<'a>,
-    selection: &'a Selection,
+    selection: &'a Spanned<Selection>,
 ) {
     v.enter_selection(ctx, selection);
-    match selection {
+    match &selection.node {
         Selection::Field(field) => {
-            if field.name != "__typename" {
+            if field.name.as_str() != "__typename" {
                 ctx.with_type(
                     ctx.current_type()
                         .and_then(|ty| ty.field_by_name(&field.name))
@@ -534,7 +554,11 @@ fn visit_selection<'a, V: Visitor<'a>>(
     v.exit_selection(ctx, selection);
 }
 
-fn visit_field<'a, V: Visitor<'a>>(v: &mut V, ctx: &mut VisitorContext<'a>, field: &'a Field) {
+fn visit_field<'a, V: Visitor<'a>>(
+    v: &mut V,
+    ctx: &mut VisitorContext<'a>,
+    field: &'a Spanned<Field>,
+) {
     v.enter_field(ctx, field);
 
     for (name, value) in &field.arguments {
@@ -610,7 +634,7 @@ fn visit_input_value<'a, V: Visitor<'a>>(
 fn visit_variable_definitions<'a, V: Visitor<'a>>(
     v: &mut V,
     ctx: &mut VisitorContext<'a>,
-    variable_definitions: &'a [VariableDefinition],
+    variable_definitions: &'a [Spanned<VariableDefinition>],
 ) {
     for d in variable_definitions {
         v.enter_variable_definition(ctx, d);
@@ -621,7 +645,7 @@ fn visit_variable_definitions<'a, V: Visitor<'a>>(
 fn visit_directives<'a, V: Visitor<'a>>(
     v: &mut V,
     ctx: &mut VisitorContext<'a>,
-    directives: &'a [Directive],
+    directives: &'a [Spanned<Directive>],
 ) {
     for d in directives {
         v.enter_directive(ctx, d);
@@ -646,7 +670,7 @@ fn visit_directives<'a, V: Visitor<'a>>(
 fn visit_fragment_definition<'a, V: Visitor<'a>>(
     v: &mut V,
     ctx: &mut VisitorContext<'a>,
-    fragment: &'a FragmentDefinition,
+    fragment: &'a Spanned<FragmentDefinition>,
 ) {
     v.enter_fragment_definition(ctx, fragment);
     visit_directives(v, ctx, &fragment.directives);
@@ -657,7 +681,7 @@ fn visit_fragment_definition<'a, V: Visitor<'a>>(
 fn visit_fragment_spread<'a, V: Visitor<'a>>(
     v: &mut V,
     ctx: &mut VisitorContext<'a>,
-    fragment_spread: &'a FragmentSpread,
+    fragment_spread: &'a Spanned<FragmentSpread>,
 ) {
     v.enter_fragment_spread(ctx, fragment_spread);
     visit_directives(v, ctx, &fragment_spread.directives);
@@ -667,7 +691,7 @@ fn visit_fragment_spread<'a, V: Visitor<'a>>(
 fn visit_inline_fragment<'a, V: Visitor<'a>>(
     v: &mut V,
     ctx: &mut VisitorContext<'a>,
-    inline_fragment: &'a InlineFragment,
+    inline_fragment: &'a Spanned<InlineFragment>,
 ) {
     v.enter_inline_fragment(ctx, inline_fragment);
     visit_directives(v, ctx, &inline_fragment.directives);

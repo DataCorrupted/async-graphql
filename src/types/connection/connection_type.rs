@@ -195,7 +195,7 @@ impl<T: OutputValueType + Send + Sync, E: ObjectType + Sync + Send> ObjectType
         }
 
         Err(Error::Query {
-            pos: ctx.position,
+            pos: ctx.position(),
             path: None,
             err: QueryError::FieldNotFound {
                 field_name: ctx.name.clone_inner(),

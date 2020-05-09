@@ -14,7 +14,7 @@ impl<'a> Visitor<'a> for ProvidedNonNullArguments {
                     && directive
                         .arguments
                         .iter()
-                        .find(|(name, _)| name == arg.name)
+                        .find(|(name, _)| name.as_str() == arg.name)
                         .is_none()
                 {
                     ctx.report_error(vec![directive.position],
